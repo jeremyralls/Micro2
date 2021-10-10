@@ -1,18 +1,18 @@
-boolean toggle1 = 0;
-boolean flag1 = false;
-boolean flag2 = false;
-int count = 0;
+boolean toggle1 = 0;    //used to read if the buton is pressed
+boolean flag1 = false;  //used to read if button is pressed ot start traffic light sequence
+boolean flag2 = false;  //used when dubugging
+int count = 0;          //used to count seconds using interupt to add to count
 
 void setup(){
 
-  //set pins as outputs
-  pinMode(2, OUTPUT);
-  pinMode(11, INPUT);
-  pinMode(4, OUTPUT);
-  pinMode(3, OUTPUT);
-  pinMode(6, OUTPUT);
 
-  Serial.begin(9600);
+  pinMode(2, OUTPUT);   //sets pin 2 to output to contol RED LED
+  pinMode(11, INPUT);   //sets pin 11 to input to read BUTTON PRESS
+  pinMode(4, OUTPUT);   //sets pin 4 to output to control GREEN LED
+  pinMode(3, OUTPUT);   //sets pin 3 to output to control YELLOW LED
+  pinMode(6, OUTPUT);   //sets pin 6 to output to control buzzer
+
+  Serial.begin(9600);   //allows for dubugging to console when needed in debugging process
 
   cli();//stop interrupts
 
@@ -43,59 +43,60 @@ void setup(){
 ISR(TIMER1_COMPA_vect){//timer1 interrupt 1Hz toggles pin 13 (LED)
 //generates pulse wave of frequency 1Hz/2 = 0.5kHz (takes two cycles for full wave- toggle high then toggle low)
   
-  if(flag1 == false) {
-    if (toggle1){
-      digitalWrite(2,HIGH);
-      toggle1 = 0;
+  if(flag1 == false) {  //check if button flag hs not been change to true
+    if (toggle1){       //check if toggle is 0 or 1 to see if led nedds to be on or off
+      digitalWrite(2,HIGH); //turn on LED
+      toggle1 = 0;          //change toggle to 0 to send to turning led off loop next interrupt
     }
     else{
-      digitalWrite(2,LOW);
-      toggle1 = 1;
+      digitalWrite(2,LOW);  //turn LEd off
+      toggle1 = 1;          //send back to turn LED on loop when interrupt triggers
     }
   }
-  else {
-    if(toggle1 == 0) {
-      count++;
-      toggle1 = 1;
-      Serial.println(count+1);
+  else {                //for when button is pressed
+    if(toggle1 == 0) {  //chceck if LED is on or off from previous toggle or on a low value from the low interrupt
+      count++;          //add to count for timing light chnages
+      toggle1 = 1;      //change to other toggle for low reading on interrupt
+      Serial.println(count+1);  //used to debug and see if count is added properly
     }
-    else{
-      toggle1 = 0;
-      count++;
+    else{               //for when toggle is set high
+      toggle1 = 0;      //set toggle to low
+      count++;          //add to count making count go up twice every second
     }
   }
 }
 
 void loop(){
-  //do other things here
-  if(digitalRead(11) == HIGH) {
-    flag1 = true;
+  //main code for traffic light control
+  if(digitalRead(11) == HIGH) {     //check if Botton is pressed
+    flag1 = true;                   //chnge button pressed flag to true
   }
-
-  if(count <= 20 && flag1 == true) {
-    digitalWrite(2, HIGH);
-    if(count == 18) {
-      digitalWrite(6, HIGH);
+                                        //flag1 must be also be true or else code from before button 
+                                        //press will ececute not this code even after button press
+  if(count <= 20 && flag1 == true) {    //from button press to 10 seconds this will execute
+    digitalWrite(2, HIGH);              //turn on RED LED
+    if(count == 18) {                   //for last 3 seconds of red light
+      digitalWrite(6, HIGH);            //activate buzzer
     }
   }
-  else if (count <= 40 && flag1 == true){
-    if(count == 21) {
-      digitalWrite(6, LOW);
+  else if (count <= 40 && flag1 == true){   //from 10 seconds to 20 seconds this will execute
+    if(count == 21) {                       //during switch to green
+      digitalWrite(6, LOW);                 //turn BUZZER off from red ligth warning 
     }
-    digitalWrite(2, LOW);
-    digitalWrite(4, HIGH);
-    if(count == 38) {
-      digitalWrite(6, HIGH);
+    digitalWrite(2, LOW);                   //turn off RED LED
+    digitalWrite(4, HIGH);                  //turn on GREEN LED
+    if(count == 38) {                       //for last 3 seconds of green light
+      digitalWrite(6, HIGH);                //activate buzzer
     }
   }
-  else if(count <= 43 && flag1 == true) {
-    digitalWrite(4, LOW);
-    digitalWrite(3, HIGH);
+  else if(count <= 43 && flag1 == true) {   //from 20 seconds to 23 seconds this will execute
+    digitalWrite(4, LOW);                   //turn off GREEN LED
+    digitalWrite(3, HIGH);                  //turn on YELLOW LED
   }
-  else {
-    digitalWrite(6, LOW);
-    digitalWrite(3, LOW);
-    count = 0;
+  else {                        //once 23 seconds have passed this will execute
+    digitalWrite(6, LOW);       //turn off buzzer from yellow light
+    digitalWrite(3, LOW);       //turn off YELLOW LED
+    count = 0;                  //reset count to 0 so code loops back to 0 seconds
   }
   
   if (toggle1) {
