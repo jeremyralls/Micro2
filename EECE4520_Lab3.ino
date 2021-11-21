@@ -73,33 +73,37 @@ void setup() {
 ISR(TIMER1_COMPA_vect){//timer1 interrupt 1Hz toggles pin 13 (LED)
 //generates pulse wave of frequency 1Hz/2 = 0.5kHz (takes two cycles for full wave- toggle high then toggle low)
 
-  //Startup (red LED flashing before button is pushed)
-  if(toggle) {       //check if toggle is 0 or 1 to see if led needs to be on or off
+  if(toggle) { // check if the toggle is set to 1
+   // update motor data
     hour = dt.hour;
     minute = dt.minute;
     second = dt.second;
     direction1 = dFlag;
-    toggle = 0;          //change toggle to 0 to turn off LED next interrupt
+    toggle = 0; // set toggle to 0
   }
-  else{
+  else{ // if toggle is set to 0
+   // update motor data
     hour = dt.hour;
     minute = dt.minute;
     second = dt.second;
     direction1 = dFlag;
-    toggle = 1;          //change toggle to 1 to turn on LED next interrupt
+    toggle = 1; // set toggle to 1
   }
 }
 
 void loop() {
-    dt = clock.getDateTime();
-
+    dt = clock.getDateTime(); // retrieve date and time
+    
+    // start motor every minute
     if(second == 0) {
       digitalWrite(ENABLE, HIGH);
     }
+    // stop the motor after 30 seconds
     if(second == 30) {
       digitalWrite(ENABLE, LOW);
     }
-
+    
+    // change motor direction if the button is pressed
     if(digitalRead(BUTTON) == HIGH) {
       if(dFlag == true) {
         dFlag = false;
